@@ -23,7 +23,7 @@ import java.io.Writer;
 /**
  * Builder style API for emitting XML. <pre>
  * StringWriter writer = new StringWriter();
- * XmlBuilder xml = new XmlBuilder(writer);
+ * XmlWriter xml = new XmlWriter(writer);
  * xml.element("meow")
  *	.attribute("moo", "cow")
  *	.element("child")
@@ -51,6 +51,12 @@ public class XmlWriter extends Writer {
 		this.writer = writer;
 	}
 
+	/** Escape special characters as per http://www.w3.org/TR/REC-xml/ */
+	private String encodeSpecialChars (String text) {
+		return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;")
+			.replaceAll("'", "&apos;");
+	}
+
 	private void indent () throws IOException {
 		int count = indent;
 		if (currentElement != null) count++;
@@ -62,8 +68,9 @@ public class XmlWriter extends Writer {
 		if (startElementContent()) writer.write('\n');
 		indent();
 		writer.write('<');
-		writer.write(name);
-		currentElement = name;
+		String encodedName = encodeSpecialChars(name);
+		writer.write(encodedName);
+		currentElement = encodedName;
 		return this;
 	}
 
@@ -83,16 +90,17 @@ public class XmlWriter extends Writer {
 	public XmlWriter attribute (String name, Object value) throws IOException {
 		if (currentElement == null) throw new IllegalStateException();
 		writer.write(' ');
-		writer.write(name);
+		String encodedName = encodeSpecialChars(name);
+		writer.write(encodedName);
 		writer.write("=\"");
-		writer.write(value == null ? "null" : value.toString());
+		writer.write(value == null ? "null" : encodeSpecialChars(value.toString()));
 		writer.write('"');
 		return this;
 	}
 
 	public XmlWriter text (Object text) throws IOException {
 		startElementContent();
-		String string = text == null ? "null" : text.toString();
+		String string = text == null ? "null" : encodeSpecialChars(text.toString());
 		indentNextClose = string.length() > 64;
 		if (indentNextClose) {
 			writer.write('\n');

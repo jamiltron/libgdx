@@ -223,6 +223,7 @@ public class GdxTests {
 		VertexBufferObjectTest.class,
 		VibratorTest.class,
 		WaterRipples.class,
+		XmlWriterTest.class,
 		YDownTest.class
 		// @on
 
